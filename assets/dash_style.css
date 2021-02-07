@@ -1,0 +1,38 @@
+body {
+	font-family: sans-serif;
+	background-color: #351f39;
+	color: aliceblue;
+}
+
+.card {
+	background-color: rgba(53, 31, 57, 0.7);
+	border-radius: 1.25rem;
+	border-color: aqua;
+	box-shadow: 1.25em;
+	font-size: 1.25rem;
+}
+
+.navbar,
+.navbar-light,
+.navbar-brand,
+.nav-link {
+	background-color: #351f39 !important;
+	color: aliceblue !important;
+}
+
+.navbar-brand {
+	font-size: 2rem;
+}
+
+.nav-link {
+	font-size: 1.25rem;
+	margin-top: 10px;
+}
+
+#visualize-heading {
+	color: #a0c1b8;
+}
+
+#control-panel-heading {
+	text-decoration: underline;
+}
