@@ -29,9 +29,18 @@ def generate_table(dataframe, max_rows=10):
     ])
 
 
+population = []
+
 # Differential Evolution
-def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000):
+
+
+def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000, flag=True):
     dimensions = len(bounds)
+    # pop = []
+    # if (flag == True):
+    #     pop = np.random.rand(popsize, dimensions)
+    # else:
+    #     pop = flag
     pop = np.random.rand(popsize, dimensions)
     min_b, max_b = np.asarray(bounds).T
     diff = np.fabs(min_b - max_b)
@@ -117,7 +126,6 @@ controls = dbc.Card([
 
 ], body=True)
 
-
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Cosine Function", href="#")),
@@ -172,7 +180,6 @@ app.layout = dbc.Container(children=[
     ]
 )
 def update_graph(n_iter, mut, cross, psize):
-
     fig = go.Figure()
     if n_iter == 0:
         return fig
@@ -181,7 +188,7 @@ def update_graph(n_iter, mut, cross, psize):
 
     for d in dimensions:
         it = list(de(lambda x: sum(
-            x**2)/d, [(-100, 100)] * d, mut=mut, crossp=cross, popsize=psize, its=n_iter))
+            x ** 2) / d, [(-100, 100)] * d, mut=mut, crossp=cross, popsize=psize, its=n_iter))
         x, f = zip(*it)
         fig.add_trace(go.Scatter(y=f, mode='lines',
                                  name="Dimensions: {}".format(d)))
