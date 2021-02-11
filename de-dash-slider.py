@@ -71,7 +71,8 @@ def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000, flag=True):
 external_stylesheets = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css', [dbc.themes.BOOTSTRAP]]
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
+                suppress_callback_exceptions=True)
 
 list1 = [0, 100, 200, 300]
 
@@ -118,7 +119,7 @@ controls = dbc.Card([
     ]),
     html.Hr(),
     dbc.Button(
-        'Download Video Animation',
+        'Save the Progress!',
         color='danger',
         block=True,
         id='button'
@@ -128,7 +129,10 @@ controls = dbc.Card([
 
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Cosine Function", href="#")),
+        dbc.NavItem(dbc.NavLink(dcc.Link('Cosine Function',
+                                         href='/cosine', className="text-decoration-none text-reset"))),
+        dbc.NavItem(dbc.NavLink(dcc.Link('Visualize Uploaded Data',
+                                         href='/data', className="text-decoration-none text-reset"))),
         # dbc.DropdownMenu(
         #     children=[
         #         dbc.DropdownMenuItem("More pages", header=True),
@@ -141,26 +145,45 @@ navbar = dbc.NavbarSimple(
         # ),
     ],
     brand="Home",
-    brand_href="#",
+    brand_href="/",
 )
+
 
 # HTML Structure
 app.layout = dbc.Container(children=[
     navbar,
-    html.H1('Differential Evolution Dashboard',
+    dcc.Location(id='url', refresh=False),
+    dbc.Container(id='page-content')
+])
+
+mathematical_function = dbc.Container([
+    html.H1('Differential Evolution Simulation',
             className="text-center h1"),
     html.Hr(),
 
     dbc.Row([
         dbc.Col(controls, md=4),
         dbc.Col(dcc.Graph(id='example-graph', figure={}), md=8)
-    ], align="center"),
+    ], align="center")
+])
 
 
+cosine_page_layout = dbc.Container([
+    html.H1('Cosine Function', className="text-center h1"),
+    html.Hr(),
 
     dbc.Row([
-        html.H2('Visualize Uploaded Data', id='visualize-heading',
-                className='text-center'),
+        dcc.Graph(id='cosine-graph', figure={})
+    ], align="center")
+])
+
+visualize_data_layout = dbc.Container([
+    html.H1('User Uploaded Data',
+            className="text-center h1"),
+
+    html.Hr(),
+
+    dbc.Row([
         dbc.Container(
             generate_table(dataframe=dataframe),
         ),
@@ -168,6 +191,17 @@ app.layout = dbc.Container(children=[
         className="mt-4 pt-4"
     )
 ])
+
+
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/cosine':
+        return cosine_page_layout
+    elif pathname == '/data':
+        return visualize_data_layout
+    else:
+        return mathematical_function
 
 
 @ app.callback(
