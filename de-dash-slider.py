@@ -68,6 +68,44 @@ def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000, flag=True):
         yield best, fitness[best_idx]
 
 
+def de2(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000):
+    dimensions = len(bounds)
+    pop = np.random.rand(popsize, dimensions)
+    min_b, max_b = np.asarray(bounds).T
+    diff = np.fabs(min_b - max_b)
+    pop_denorm = min_b + pop * diff
+    fitness = np.asarray([fobj(ind) for ind in pop_denorm])
+    best_idx = np.argmin(fitness)
+    best = pop_denorm[best_idx]
+    for i in range(its):
+        for j in range(popsize):
+            idxs = [idx for idx in range(popsize) if idx != j]
+            a, b, c = pop[np.random.choice(idxs, 3, replace=False)]
+            mutant = np.clip(a + mut * (b - c), 0, 1)
+            cross_points = np.random.rand(dimensions) < crossp
+            if not np.any(cross_points):
+                cross_points[np.random.randint(0, dimensions)] = True
+            trial = np.where(cross_points, mutant, pop[j])
+            trial_denorm = min_b + trial * diff
+            f = fobj(trial_denorm)
+            if f < fitness[j]:
+                fitness[j] = f
+                pop[j] = trial
+                if f < fitness[best_idx]:
+                    best_idx = j
+                    best = trial_denorm
+        yield min_b + pop * diff, fitness, best_idx
+
+
+def rmse(w):
+    y_pred = fmodel(x, w)
+    return np.sqrt(sum((y - y_pred) ** 2) / len(y))
+
+
+def fmodel(x, w):
+    return w[0] + w[1]*x + w[2] * x**2 + w[3] * x**3 + w[4] * x**4 + w[5] * x**5
+
+
 external_stylesheets = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css', [dbc.themes.BOOTSTRAP]]
 
@@ -168,6 +206,31 @@ mathematical_function = dbc.Container([
 ])
 
 
+@ app.callback(
+    Output("example-graph", "figure"),
+    [
+        Input("iterations-slider", "value"),
+        Input('mutation', 'value'),
+        Input('crossover', 'value'),
+        Input('popsize', 'value')
+    ]
+)
+def update_graph(n_iter, mut, cross, psize):
+    fig = go.Figure()
+    if n_iter == 0:
+        return fig
+
+    dimensions = [8, 16, 32, 64]
+
+    for d in dimensions:
+        it = list(de(lambda x: sum(
+            x ** 2) / d, [(-100, 100)] * d, mut=mut, crossp=cross, popsize=psize, its=n_iter))
+        x, f = zip(*it)
+        fig.add_trace(go.Scatter(y=f, mode='lines',
+                                 name="Dimensions: {}".format(d)))
+    return fig
+
+
 cosine_page_layout = dbc.Container([
     html.H1('Cosine Function', className="text-center h1"),
     html.Hr(),
@@ -176,6 +239,22 @@ cosine_page_layout = dbc.Container([
         dcc.Graph(id='cosine-graph', figure={})
     ], align="center")
 ])
+
+
+@app.callback(
+    Output('cosine-graph', 'figure')
+    [
+        Input("iterations-slider", "value"),
+        Input('mutation', 'value'),
+        Input('crossover', 'value'),
+        Input('popsize', 'value')
+    ]
+)
+def cosine_function(n_iter, mut, cross, psize):
+    fig = go.Figure()
+    if (n_iter == 0):
+        return fig
+
 
 visualize_data_layout = dbc.Container([
     html.H1('User Uploaded Data',
@@ -202,31 +281,6 @@ def display_page(pathname):
         return visualize_data_layout
     else:
         return mathematical_function
-
-
-@ app.callback(
-    Output("example-graph", "figure"),
-    [
-        Input("iterations-slider", "value"),
-        Input('mutation', 'value'),
-        Input('crossover', 'value'),
-        Input('popsize', 'value')
-    ]
-)
-def update_graph(n_iter, mut, cross, psize):
-    fig = go.Figure()
-    if n_iter == 0:
-        return fig
-
-    dimensions = [8, 16, 32, 64]
-
-    for d in dimensions:
-        it = list(de(lambda x: sum(
-            x ** 2) / d, [(-100, 100)] * d, mut=mut, crossp=cross, popsize=psize, its=n_iter))
-        x, f = zip(*it)
-        fig.add_trace(go.Scatter(y=f, mode='lines',
-                                 name="Dimensions: {}".format(d)))
-    return fig
 
 
 def upload_data(url):
