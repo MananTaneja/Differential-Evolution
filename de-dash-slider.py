@@ -187,12 +187,24 @@ navbar = dbc.NavbarSimple(
 )
 
 
-# HTML Structure
+# HTML Structure - Main Page
 app.layout = dbc.Container(children=[
     navbar,
     dcc.Location(id='url', refresh=False),
     dbc.Container(id='page-content')
 ])
+
+
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/cosine':
+        return cosine_page_layout
+    elif pathname == '/data':
+        return visualize_data_layout
+    else:
+        return mathematical_function
+
 
 mathematical_function = dbc.Container([
     html.H1('Differential Evolution Simulation',
@@ -241,19 +253,19 @@ cosine_page_layout = dbc.Container([
 ])
 
 
-@app.callback(
-    Output('cosine-graph', 'figure')
-    [
-        Input("iterations-slider", "value"),
-        Input('mutation', 'value'),
-        Input('crossover', 'value'),
-        Input('popsize', 'value')
-    ]
-)
-def cosine_function(n_iter, mut, cross, psize):
-    fig = go.Figure()
-    if (n_iter == 0):
-        return fig
+# @app.callback(
+#     Output('cosine-graph', 'figure')
+#     [
+#         Input("iterations-slider", "value"),
+#         Input('mutation', 'value'),
+#         Input('crossover', 'value'),
+#         Input('popsize', 'value')
+#     ]
+# )
+# def cosine_function(n_iter, mut, cross, psize):
+#     fig = go.Figure()
+#     if (n_iter == 0):
+#         return fig
 
 
 visualize_data_layout = dbc.Container([
@@ -270,21 +282,6 @@ visualize_data_layout = dbc.Container([
         className="mt-4 pt-4"
     )
 ])
-
-
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
-    if pathname == '/cosine':
-        return cosine_page_layout
-    elif pathname == '/data':
-        return visualize_data_layout
-    else:
-        return mathematical_function
-
-
-def upload_data(url):
-    dataframe = pd.read_csv(url)
 
 
 if __name__ == '__main__':
