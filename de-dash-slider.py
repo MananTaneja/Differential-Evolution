@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 # Follow this link - https://plotly.com/python/animations/
 
 
-population = []
+population_data = []
 
 # Differential Evolution
 
@@ -49,6 +49,7 @@ def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000, flag=True):
                 if f < fitness[best_idx]:
                     best_idx = j
                     best = trial_denorm
+        population_data.append(pop)
         yield best, fitness[best_idx]
 
 
@@ -153,9 +154,11 @@ controls = dbc.Card([
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink(dcc.Link('Cosine Function',
-                                         href='/cosine', className="text-decoration-none text-reset"))),
+                                         href='/cosine', className="mx-4 text-decoration-none text-reset"))),
         dbc.NavItem(dbc.NavLink(dcc.Link('Visualize Uploaded Data',
-                                         href='/data', className="text-decoration-none text-reset"))),
+                                         href='/data', className="mx-4 text-decoration-none text-reset"))),
+        dbc.NavItem(dbc.NavLink(dcc.Link('Previous Runs',
+                                         href='/prev', className="mx-4 text-decoration-none text-reset"))),
         # dbc.DropdownMenu(
         #     children=[
         #         dbc.DropdownMenuItem("More pages", header=True),
@@ -168,7 +171,7 @@ navbar = dbc.NavbarSimple(
         # ),
     ],
     brand="Home",
-    brand_href="/",
+    brand_href="/"
 )
 
 
@@ -187,6 +190,8 @@ def display_page(pathname):
         return cosine_page_layout
     elif pathname == '/data':
         return visualize_data_layout
+    elif pathname == '/prev':
+        return previous_runs_layout
     else:
         return mathematical_function
 
@@ -233,7 +238,10 @@ def update_graph(n_iter, mut, cross, psize, save_progress_button):
                                  name="Dimensions: {}".format(d)))
 
         if(store == True):
-            print('Dimension ' + str(d) + ' : ' + str(f))
+            print('Dimension ' + str(d) + ' : ' + str(f) + '\n')
+            print('Population Data: \n')
+            for pop in population_data:
+                print(str(pop))
 
     return fig
 
@@ -302,6 +310,46 @@ def generate_table(value, max_rows=100):
                 html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
             ]) for i in range(min(len(dataframe), max_rows))
         ])
+    ])
+
+
+previous_runs_layout = dbc.Container([
+    html.H1('Check Previous Runs', className='text-center'),
+    html.Hr(),
+    dbc.DropdownMenu(
+        label="Previous Runs",
+        children=[
+            dbc.DropdownMenuItem('Run at 12:00', id='run1'),
+            dbc.DropdownMenuItem('Run at 13:30', id='run2'),
+            dbc.DropdownMenuItem('Run at 16:00', id='run3')
+        ]
+    ),
+    dbc.Container(id='output_run', className='mt-4 pt-4')
+])
+
+
+@app.callback(
+    Output('output_run', 'children'),
+    [
+        Input('run1', 'n_clicks'),
+        Input('run2', 'n_clicks'),
+        Input('run3', 'n_clicks'),
+    ])
+def update_run(run1, run2, run3):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if 'run1' in changed_id:
+        msg = 'Displaying the saved progress of run 1'
+    elif 'run2' in changed_id:
+        msg = 'Displaying the saved progress of run 2'
+    elif 'run3' in changed_id:
+        msg = 'Displaying the saved progress of run 3'
+    else:
+        msg = 'No Session Selected'
+        return html.H3(msg)
+
+    return dbc.Container([
+        html.H3(msg),
+        dcc.Graph(id='prev_session_graph', figure={})
     ])
 
 
