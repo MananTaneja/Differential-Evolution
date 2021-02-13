@@ -12,22 +12,6 @@ import plotly.graph_objects as go
 # using-a-slider-and-buttons
 # Follow this link - https://plotly.com/python/animations/
 
-dataframe = pd.read_csv(
-    'https://gist.githubusercontent.com/chriddyp/c78bf172206ce24f77d6363a2d754b59/raw/c353e8ef842413cae56ae3920b8fd78468aa4cb2/usa-agricultural-exports-2011.csv')
-
-
-def generate_table(dataframe, max_rows=10):
-    return html.Table([
-        html.Thead(
-            html.Tr([html.Th(col) for col in dataframe.columns])
-        ),
-        html.Tbody([
-            html.Tr([
-                html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-            ]) for i in range(min(len(dataframe), max_rows))
-        ])
-    ])
-
 
 population = []
 
@@ -160,7 +144,8 @@ controls = dbc.Card([
         'Save the Progress!',
         color='danger',
         block=True,
-        id='button'
+        id='save_progress_button',
+        n_clicks=0
     )
 
 ], body=True)
@@ -224,15 +209,21 @@ mathematical_function = dbc.Container([
         Input("iterations-slider", "value"),
         Input('mutation', 'value'),
         Input('crossover', 'value'),
-        Input('popsize', 'value')
+        Input('popsize', 'value'),
+        Input('save_progress_button', 'n_clicks')
     ]
 )
-def update_graph(n_iter, mut, cross, psize):
+def update_graph(n_iter, mut, cross, psize, save_progress_button):
     fig = go.Figure()
     if n_iter == 0:
         return fig
 
     dimensions = [8, 16, 32, 64]
+
+    store = False
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if 'save_progress_button' in changed_id:
+        store = True
 
     for d in dimensions:
         it = list(de(lambda x: sum(
@@ -240,6 +231,10 @@ def update_graph(n_iter, mut, cross, psize):
         x, f = zip(*it)
         fig.add_trace(go.Scatter(y=f, mode='lines',
                                  name="Dimensions: {}".format(d)))
+
+        if(store == True):
+            print('Dimension ' + str(d) + ' : ' + str(f))
+
     return fig
 
 
@@ -248,8 +243,11 @@ cosine_page_layout = dbc.Container([
     html.Hr(),
 
     dbc.Row([
-        dcc.Graph(id='cosine-graph', figure={})
-    ], align="center")
+        html.Video(
+            src='https://pablormier.github.io/assets/img/de/curve-fitting.mp4#center',
+            autoPlay='autoPlay',
+            # controls='controls'
+        )], align="center",)
 ])
 
 
@@ -262,10 +260,12 @@ cosine_page_layout = dbc.Container([
 #         Input('popsize', 'value')
 #     ]
 # )
-# def cosine_function(n_iter, mut, cross, psize):
+# def cosine_graph(n_iter, mut, cross, psize):
 #     fig = go.Figure()
 #     if (n_iter == 0):
 #         return fig
+
+#     result = list(de2(rmse, [(-5, 5) * 6], its=2000))
 
 
 visualize_data_layout = dbc.Container([
@@ -273,15 +273,36 @@ visualize_data_layout = dbc.Container([
             className="text-center h1"),
 
     html.Hr(),
-
+    dbc.Input(id="database_url", placeholder="Link to data", type='text'),
     dbc.Row([
-        dbc.Container(
-            generate_table(dataframe=dataframe),
-        ),
+        dbc.Container(id="table"
+                      # generate_table(dataframe=dataframe),
+                      ),
     ],
         className="mt-4 pt-4"
     )
 ])
+
+
+@app.callback(
+    Output('table', 'children'),
+    [Input('database_url', 'value')])
+def generate_table(value, max_rows=100):
+    dataframe = pd.read_csv(value)
+
+    if (dataframe.empty):
+        return 'Invalid'
+
+    return html.Table([
+        html.Thead(
+            html.Tr([html.Th(col) for col in dataframe.columns])
+        ),
+        html.Tbody([
+            html.Tr([
+                html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+            ]) for i in range(min(len(dataframe), max_rows))
+        ])
+    ])
 
 
 if __name__ == '__main__':
