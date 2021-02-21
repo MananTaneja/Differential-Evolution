@@ -36,7 +36,7 @@ It works on 3 Fundamental Operators:
 
 ## Instructions To Run
 
-**Pre-requisites** 
+**Prerequisites** 
 
 1. Python
 2. Conda / Anaconda
