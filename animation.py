@@ -37,7 +37,7 @@ def display_animated_graph(s):
     return animations[s]
 
 
-app.run_server(debug=True)
+app.run_server(debug=True, port=3001)
 
 
 # Matplotlib vs plotly - comparitive framework study
