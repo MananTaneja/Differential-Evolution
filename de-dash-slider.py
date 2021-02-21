@@ -295,7 +295,7 @@ visualize_data_layout = dbc.Container([
 @app.callback(
     Output('table', 'children'),
     [Input('database_url', 'value')])
-def generate_table(value, max_rows=100):
+def generate_table(value, max_rows=10):
     dataframe = pd.read_csv(value)
 
     if (dataframe.empty):
