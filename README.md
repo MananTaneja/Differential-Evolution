@@ -51,6 +51,7 @@ cd Differential-Evolution
 Running the correct file
 
 ```
+conda activate
 python de-dash-slider.py
 ```
 
